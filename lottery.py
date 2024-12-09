@@ -169,7 +169,7 @@ if data is not None:
         mime='text/csv',
     )
 
-    # Função para gerar PDF
+    # Função para gerar o PDF
     def gerar_pdf(df):
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)  # Configurar quebra automática de página
@@ -186,9 +186,10 @@ if data is not None:
 
         # Gravar o conteúdo no buffer de memória
         pdf_output = BytesIO()
-        pdf.output(pdf_output)
+        pdf.output(pdf_output)  # Aqui passamos o buffer de memória
         pdf_output.seek(0)  # Garante que o ponteiro está no início do buffer
-        return pdf_output.getvalue()
+
+        return pdf_output.getvalue()  # Retorna os bytes do PDF gerado
 
     pdf_bytes = gerar_pdf(simulados_df)
     st.download_button(
