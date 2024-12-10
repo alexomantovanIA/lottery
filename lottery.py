@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import seaborn as sns
-import matplotlib.pyplot as plt
 import random
-import datetime
 from io import BytesIO
-from fpdf import FPDF
+from reportlab.pdfgen import canvas
 
 # Função para carregar e processar o arquivo Excel
 def load_data(file_path):
@@ -107,33 +104,35 @@ if data is not None:
     )
 
     # Baixar como PDF
-    def gerar_pdf(df):
-        pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=15)  # Configurar quebra automática de página
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
+    def gerar_pdf(simulados_df):
+        pdf_buffer = BytesIO()  # Buffer de memória para armazenar o PDF
+        pdf = canvas.Canvas(pdf_buffer)
 
-        # Adicionar cabeçalho
-        pdf.cell(200, 10, txt="Jogos Simulados - Mega-Sena", ln=True, align='C')
+        pdf.setFont("Helvetica", 12)
+        y = 800  # Coordenada Y inicial
 
-        # Adicionar os jogos simulados
-        for index, row in df.iterrows():
-            linha = f"Jogo {index + 1}: {', '.join(map(str, row.values))}"
-            pdf.cell(0, 10, txt=linha, ln=True)  # Escreve cada jogo no PDF
+        for index, row in simulados_df.iterrows():
+            numeros = ", ".join(map(str, row.tolist()))  # Converte os números da linha para string
+            pdf.drawString(50, y, f"Jogo {index + 1}: {numeros}")
+            y -= 20  # Move a próxima linha para baixo
 
-        # Gravar o conteúdo no buffer de memória
-        pdf_output = BytesIO()
-        pdf.output(pdf_output)
-        pdf_output.seek(0)  # Garante que o ponteiro está no início do buffer
-        return pdf_output.getvalue()
+            if y < 50:  # Adiciona uma nova página se o espaço acabar
+                pdf.showPage()
+                pdf.setFont("Helvetica", 12)
+                y = 800
+
+        pdf.save()
+        pdf_buffer.seek(0)  # Garante que o ponteiro esteja no início do buffer
+        return pdf_buffer.getvalue()
+
 
     # Configurar botão de download no Streamlit
     pdf_bytes = gerar_pdf(simulados_df)
     st.download_button(
         label="Baixar Jogos em PDF",
         data=pdf_bytes,
-        file_name="jogos_simulados.pdf",
-        mime="application/pdf",
+        file_name="jogos.pdf",
+        mime="application/pdf"
     )
 
     # Estratégias de seleção manual

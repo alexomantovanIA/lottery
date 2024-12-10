@@ -4,7 +4,7 @@ plotly
 seaborn
 matplotlib
 random2
-fpdf
+reportlab
 scikit-learn
 openpyxl
 streamlit
