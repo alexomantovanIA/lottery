@@ -1,4 +1,3 @@
-import numpy as np
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -8,10 +7,6 @@ import random
 import datetime
 from io import BytesIO
 from fpdf import FPDF
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
 
 # Função para carregar e processar o arquivo Excel
 def load_data(file_path):
@@ -22,64 +17,6 @@ def load_data(file_path):
     df['Concurso'] = df['Concurso'].astype(int)
     df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
     return df
-
-# Função para processar os dados e criar variáveis binárias para Machine Learning
-def processar_dados_ml(df):
-    cols = ['Bola 1', 'Bola 2', 'Bola 3', 'Bola 4', 'Bola 5', 'Bola 6']
-    # Criar colunas binárias indicando a presença de cada número nos sorteios
-    for i in range(1, 61):
-        df[f"Num_{i}"] = df[cols].apply(lambda row: 1 if i in row.values else 0, axis=1)
-    return df.drop(columns=cols)
-
-# Função de treinamento e previsão de Machine Learning
-def modelo_previsao(df):
-    X = df.drop(columns=['Concurso'])  # Remover a coluna Concurso, pois ela não é relevante para a previsão
-    X = X.astype(int)  # Garantir que todas as colunas sejam inteiras (binárias)
-
-    # Criar rótulos (y) com base na presença dos números sorteados
-    # Exemplo simples: Para cada número, preveja a probabilidade de ele aparecer no próximo concurso.
-    # Aqui, estamos apenas usando a soma dos números sorteados como exemplo.
-    y = X.shift(-1, axis=0).sum(axis=1)  # Usamos a soma dos números sorteados no próximo concurso como rótulo
-
-    # Remover a última linha de 'y' porque não temos rótulo para ela
-    X = X[:-1]
-    y = y[:-1]
-
-    # Divisão dos dados em treinamento e teste
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Treinar o modelo de árvore de decisão
-    model = DecisionTreeClassifier(random_state=42)
-    model.fit(X_train, y_train)
-
-    # Fazer previsões
-    y_pred = model.predict(X_test)
-
-    # Calcular precisão
-    accuracy = accuracy_score(y_test, y_pred)
-    return model, accuracy
-
-# Função de previsão dos próximos números
-def prever_numeros(modelo, df):
-    # Remover a coluna 'Concurso' e 'Data', mas garantir que todas as colunas numéricas sejam mantidas
-    df_ml = df.drop(columns=['Concurso', 'Data'])
-    
-    # Verifique as colunas em df_ml e no modelo treinado
-    print(f"Colunas em df_ml: {df_ml.columns}")
-    print(f"Modelo espera {modelo.n_features_in_} características.")
-    
-    # Verificar se o número de colunas coincide com o número esperado pelo modelo
-    if df_ml.shape[1] != modelo.n_features_in_:
-        print(f"Erro: número de colunas em df_ml ({df_ml.shape[1]}) não coincide com o esperado pelo modelo ({modelo.n_features_in_}).")
-        # Aqui, adicione um código para ajustar as colunas conforme necessário
-        return None
-
-    # Certificar-se de que estamos apenas passando dados numéricos para o modelo
-    X = df_ml.astype(int)
-    
-    # Prevendo para o último concurso
-    pred = modelo.predict([X.iloc[-1].values])  # Prevendo para o último concurso
-    return pred
 
 # Configuração do título e descrição do dashboard
 st.title("Dashboard Avançado da Mega-Sena")
@@ -169,7 +106,7 @@ if data is not None:
         mime='text/csv',
     )
 
-    # Função para gerar o PDF
+    # Baixar como PDF
     def gerar_pdf(df):
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)  # Configurar quebra automática de página
@@ -184,39 +121,20 @@ if data is not None:
             linha = f"Jogo {index + 1}: {', '.join(map(str, row.values))}"
             pdf.cell(0, 10, txt=linha, ln=True)  # Escreve cada jogo no PDF
 
-        # Salvar o conteúdo do PDF em um buffer de memória e retornar os bytes
-        from io import BytesIO
-        buffer = BytesIO()
-        pdf.output(dest='S')  # Gera o PDF em bytes
-        buffer.write(pdf.output(dest='S'))  # Escreve os bytes no buffer
-        buffer.seek(0)  # Retorna ao início do buffer
-        return buffer.getvalue()  # Retorna os bytes do PDF
+        # Gravar o conteúdo no buffer de memória
+        pdf_output = BytesIO()
+        pdf.output(pdf_output)
+        pdf_output.seek(0)  # Garante que o ponteiro está no início do buffer
+        return pdf_output.getvalue()
 
-    # Gerar PDF
+    # Configurar botão de download no Streamlit
     pdf_bytes = gerar_pdf(simulados_df)
-
-    # Baixar o PDF
     st.download_button(
         label="Baixar Jogos em PDF",
         data=pdf_bytes,
         file_name="jogos_simulados.pdf",
         mime="application/pdf",
     )
-
-    # Treinamento do modelo ML
-    df_ml = processar_dados_ml(data_filtered)
-    modelo, accuracy = modelo_previsao(df_ml)
-
-    st.write(f"Precisão do modelo de Machine Learning: {accuracy:.2f}")
-
-    # Previsão dos próximos números
-    numeros_previstos = prever_numeros(modelo, df_ml)
-
-    # Verificar se a previsão retornou None
-    if numeros_previstos is None:
-        st.write("Erro ao prever os próximos números. Verifique os dados de entrada.")
-    else:
-        st.write(f"Os próximos números previstos pelo modelo são: {', '.join(map(str, numeros_previstos))}")
 
     # Estratégias de seleção manual
     st.subheader("Simulação de Estratégias")
