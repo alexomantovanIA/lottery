@@ -184,9 +184,13 @@ if data is not None:
             linha = f"Jogo {index + 1}: {', '.join(map(str, row.values))}"
             pdf.cell(0, 10, txt=linha, ln=True)  # Escreve cada jogo no PDF
 
-        # Gravar o conteúdo no buffer de memória e retornar os bytes do PDF
-        pdf_output = pdf.output(dest='S').encode('latin1')  # 'S' retorna os bytes em vez de salvar em um arquivo
-        return pdf_output  # Retorna os bytes do PDF gerado
+        # Salvar o conteúdo do PDF em um buffer de memória e retornar os bytes
+        from io import BytesIO
+        buffer = BytesIO()
+        pdf.output(dest='S')  # Gera o PDF em bytes
+        buffer.write(pdf.output(dest='S'))  # Escreve os bytes no buffer
+        buffer.seek(0)  # Retorna ao início do buffer
+        return buffer.getvalue()  # Retorna os bytes do PDF
 
     # Gerar PDF
     pdf_bytes = gerar_pdf(simulados_df)
