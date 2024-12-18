@@ -109,7 +109,7 @@ elif pagina == "Página Inicial":
     st.subheader("Jogos Padrão")
 
     # Jogo com maior probabilidade
-    jogo_maior_probabilidade = frequencia.nlargest(6, 'Frequência')['Número'].sort_values().tolist()
+    jogo_maior_probabilidade = sorted(frequencia.nlargest(6, 'Frequência')['Número'].sort_values().tolist())
     st.write(f"**Jogo com maior probabilidade:** {', '.join(map(str, jogo_maior_probabilidade))}")
     if st.button("Adicionar Jogo com Maior Probabilidade"):
         if jogo_maior_probabilidade not in st.session_state.jogos_selecionados:
@@ -117,7 +117,7 @@ elif pagina == "Página Inicial":
             st.success("Jogo com maior probabilidade adicionado!")
 
     # Jogo com menor probabilidade (excluindo números que nunca apareceram)
-    jogo_menor_probabilidade = frequencia[frequencia['Frequência'] > 0].nsmallest(6, 'Frequência')['Número'].sort_values().tolist()
+    jogo_menor_probabilidade = sorted(frequencia[frequencia['Frequência'] > 0].nsmallest(6, 'Frequência')['Número'].sort_values().tolist())
     st.write(f"**Jogo com menor probabilidade:** {', '.join(map(str, jogo_menor_probabilidade))}")
     if st.button("Adicionar Jogo com Menor Probabilidade"):
         if jogo_menor_probabilidade not in st.session_state.jogos_selecionados:
