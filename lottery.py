@@ -16,7 +16,7 @@ def load_data(file_path):
     return df
 
 # Carregar os dados uma vez e calcular a frequência
-data = load_data("mega_sena_asloterias_ate_concurso_2805_crescente.xlsx")
+data = load_data("database.xlsx")
 
 # Frequência de números sorteados
 bolas = data[['Bola 1', 'Bola 2', 'Bola 3', 'Bola 4', 'Bola 5', 'Bola 6']].values.flatten()
@@ -57,7 +57,7 @@ if pagina == "Dashboard":
 
     # Opção 1: Carregar o arquivo diretamente da pasta do projeto
     if data_source == "Carregar Arquivo da Pasta do Projeto":
-        file_path = "mega_sena_asloterias_ate_concurso_2805_crescente.xlsx"
+        file_path = "database.xlsx"
         try:
             data = load_data(file_path)
             st.success(f"Arquivo carregado com sucesso da pasta: {file_path}")
