@@ -153,24 +153,48 @@ elif pagina == "Página Inicial":
 
     # Usuário solicita a quantidade total de jogos desejados
     qtd_jogos_desejados = st.number_input(
-        "Quantos jogos você quer simular?", min_value=1, max_value=50, value=1
+        "Quantos jogos você quer simular?", min_value=0, max_value=50, value=1
     )
 
-    # Calcular a quantidade de jogos que precisa ser gerada
+    # Ajustar a lista de jogos simulados com base na quantidade desejada
     qtd_jogos_existentes = len(st.session_state.jogos_simulados)
-    qtd_jogos_a_gerar = max(0, qtd_jogos_desejados - qtd_jogos_existentes)
 
-    # Gerar apenas a quantidade necessária de jogos adicionais
-    for _ in range(qtd_jogos_a_gerar):
-        try:
-            jogo = gerar_numeros_simulados_unicos(frequencia)
-            st.session_state.jogos_simulados.append(jogo)
-        except ValueError as e:
-            st.error(f"Erro ao gerar jogo: {str(e)}")
-            break
+    if qtd_jogos_desejados > qtd_jogos_existentes:
+        # Gerar jogos adicionais
+        qtd_jogos_a_gerar = qtd_jogos_desejados - qtd_jogos_existentes
+        for _ in range(qtd_jogos_a_gerar):
+            try:
+                jogo = gerar_numeros_simulados_unicos(frequencia)
+                st.session_state.jogos_simulados.append(jogo)
+            except ValueError as e:
+                st.error(f"Erro ao gerar jogo: {str(e)}")
+                break
+    elif qtd_jogos_desejados < qtd_jogos_existentes:
+        # Remover os últimos jogos
+        qtd_jogos_a_remover = qtd_jogos_existentes - qtd_jogos_desejados
+        st.session_state.jogos_simulados = st.session_state.jogos_simulados[:-qtd_jogos_a_remover]
 
-    # Exibir todos os jogos simulados
+    # Interface para exibir e remover jogos
     st.write("**Jogos Simulados:**")
+    jogos_para_remover = st.multiselect(
+        "Selecione os jogos que deseja remover:",
+        options=[f"Jogo {i + 1}: {', '.join(map(str, jogo))}" for i, jogo in enumerate(st.session_state.jogos_simulados)],
+    )
+
+    # Atualizar a lista ao remover os jogos selecionados
+    if st.button("Remover Jogos Selecionados"):
+        indices_para_remover = [
+            i for i, jogo in enumerate(st.session_state.jogos_simulados)
+            if f"Jogo {i + 1}: {', '.join(map(str, jogo))}" in jogos_para_remover
+        ]
+        # Remove os jogos pelos índices selecionados
+        st.session_state.jogos_simulados = [
+            jogo for i, jogo in enumerate(st.session_state.jogos_simulados) if i not in indices_para_remover
+        ]
+        st.success(f"Jogos removidos com sucesso!")
+
+    # Exibir os jogos restantes
+    st.write("**Jogos Restantes:**")
     for i, jogo in enumerate(st.session_state.jogos_simulados, start=1):
         st.write(f"Jogo {i}: {', '.join(map(str, jogo))}")
 
