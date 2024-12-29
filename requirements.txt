@@ -8,4 +8,3 @@ reportlab
 scikit-learn
 openpyxl
 streamlit
-httpagentparser
