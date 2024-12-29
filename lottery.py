@@ -4,6 +4,8 @@ import plotly.express as px
 import random
 from io import BytesIO
 from reportlab.pdfgen import canvas
+import urllib.parse
+import httpagentparser
 
 # Função para carregar e processar o arquivo Excel
 def load_data(file_path):
@@ -247,6 +249,62 @@ elif pagina == "Página Inicial":
         mime="application/pdf"
     )
 
+    # Função para detectar dispositivo a partir do user-agent
+    def detect_device():
+        user_agent = st.query_params.get('user-agent', [''])[0]
+        device_info = httpagentparser.detect(user_agent)
+        
+        # Verifica se a plataforma contém a palavra 'mobile'
+        platform = device_info.get('platform', '')
+        
+        # Verifique se a plataforma é móvel (mobile)
+        if isinstance(platform, str) and 'mobile' in platform.lower():
+            return "mobile"
+        else:
+            return "desktop"
+
+    # Exemplo de uso
+    device = detect_device()
+    
+    # Compartilhar via WhatsApp
+    st.subheader("Compartilhar Jogos pelo WhatsApp")
+    jogos_texto = "\n".join([f"Jogo {i + 1}: {', '.join(map(str, jogo))}" for i, jogo in enumerate(todos_jogos)])
+    mensagem = f"""
+    *🎯 Mega-Sena: Seus Jogos Gerados!*
+    🎉 Olá, aqui estão os jogos que você gerou para a Mega-Sena:
+    📝 *Jogos Gerados:*
+    {jogos_texto}
+    💡 *Boa sorte nos sorteios!*
+    🔗 Compartilhe com seus amigos e aumente as chances de ganhar!
+    """
+
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    whatsapp_mobile_url = f"whatsapp://send?text={mensagem_encoded}"
+    whatsapp_web_url = f"https://api.whatsapp.com/send?text={mensagem_encoded}"
+    
+    # Verifique se o dispositivo é mobile ou desktop
+    if device == "mobile":
+        st.markdown(
+            f"""
+            <a href="{whatsapp_mobile_url}" target="_blank">
+                <button style="background-color:green;color:white;padding:10px;border:none;border-radius:5px;cursor:pointer;">
+                    Whatsapp Mobile
+                </button>
+            </a>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            f"""
+            <a href="{whatsapp_web_url}" target="_blank">
+                <button style="background-color:green;color:white;padding:10px;margin-top:20px;border:none;border-radius:5px;cursor:pointer;">
+                    Whatsapp Web
+                </button>
+            </a>
+            """,
+            unsafe_allow_html=True
+        )
 
     # Estratégias de seleção manual
     st.subheader("Simulação de Estratégias")
