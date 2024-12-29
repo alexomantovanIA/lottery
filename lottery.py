@@ -250,14 +250,19 @@ elif pagina == "Página Inicial":
     
     # Compartilhar via WhatsApp
     st.subheader("Compartilhar Jogos pelo WhatsApp")
-    jogos_texto = "\n".join([f"Jogo {i + 1}: {', '.join(map(str, jogo))}" for i, jogo in enumerate(todos_jogos)])
+    jogos_texto = "\n    ".join([f"    Jogo {i + 1}: {', '.join(map(str, jogo))}" for i, jogo in enumerate(todos_jogos)])
+
     mensagem = f"""
     *🎯 Mega-Sena: Seus Jogos Gerados!*
     🎉 Olá, aqui estão os jogos que você gerou para a Mega-Sena:
+
     📝 *Jogos Gerados:*
     {jogos_texto}
+
     💡 *Boa sorte nos sorteios!*
+
     🔗 Compartilhe com seus amigos e aumente as chances de ganhar!
+    https://lotteryml.streamlit.app/
     """
 
     mensagem_encoded = urllib.parse.quote(mensagem)
